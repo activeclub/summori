@@ -1,0 +1,27 @@
+[project]
+name = "summori"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = "==3.11.*"
+dependencies = ["api"]
+
+[tool.uv.sources]
+api = { workspace = true }
+
+[tool.uv.workspace]
+members = ["apps/api"]
+
+[tool.ruff.lint]
+ignore = [
+  "E501", # Line too long
+]
+select = [
+  "E", # pycodestyle
+  "F", # pyflakes
+  "I", # isort
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -1,5 +1,7 @@
+import xml.etree.ElementTree as ET
 from pprint import pprint
 
+import requests
 from bs4 import BeautifulSoup
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_community.document_loaders import AsyncHtmlLoader, WebBaseLoader
@@ -9,7 +11,7 @@ from langchain_openai import ChatOpenAI
 
 from api.config import config
 
-llm = ChatOpenAI(model="gpt-4o-mini", api_key=config.openai_api_key)
+llm = ChatOpenAI(model="gpt-4o-mini", api_key=config.openai_api_key)  # type: ignore
 
 page_url = "https://arxiv.org/html/2412.05313v1"
 
@@ -63,5 +65,16 @@ The paper begins here:
     pprint(result)
 
 
+def load_rss():
+    url = "https://news.ycombinator.com/rss"
+    r = requests.get(url)
+    root = ET.fromstring(r.text)
+
+    channel = root[0]
+    for child in channel:
+        if child.tag == "title":
+            print(child.text)
+
+
 if __name__ == "__main__":
-    load_html2text()
+    load_rss()

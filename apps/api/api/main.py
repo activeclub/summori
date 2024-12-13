@@ -1,30 +1,46 @@
 import xml.etree.ElementTree as ET
 from pprint import pprint
 
+import html2text
 import requests
 from bs4 import BeautifulSoup
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_community.document_loaders import AsyncHtmlLoader, WebBaseLoader
+from langchain_community.document_loaders import AsyncHtmlLoader
 from langchain_community.document_transformers import Html2TextTransformer
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
+from pydantic_ai import Agent
+from pydantic_ai.models.openai import OpenAIModel
 
 from api.config import config
 
-llm = ChatOpenAI(model="gpt-4o-mini", api_key=config.openai_api_key)  # type: ignore
+
+def query_pydantic_ai(url: str):
+    r = requests.get(url)
+    text = html2text.html2text(r.text)
+    prompt = f"""Please prepare a summary of the paper you have given in the following format in Japanese.
+Each item should be expressed in three bullet points.
+
+【背景】
+【目的】
+【手法】
+【実験方法】
+【実験結果】
+【考察】
+
+The paper begins here:
+---
+{text}"""
+
+    model = OpenAIModel(model_name="o1-preview", api_key=config.openai_api_key)
+    agent: Agent = Agent(model=model)
+
+    result = agent.run_sync(prompt)
+    return result.data
 
 
-def load_web(url: str):
-    loader = WebBaseLoader(web_paths=[url])
-
-    docs = loader.load()
-
-    doc = docs[0]
-    print(doc)
-
-
-def load_html2text(url: str):
-    html2text = Html2TextTransformer()
+def query_langchain(url: str):
+    h2t = Html2TextTransformer()
 
     loader = AsyncHtmlLoader([url])
     docs = loader.load()
@@ -40,7 +56,7 @@ def load_html2text(url: str):
         else:
             images.append(f"{url}/{img_tag['src']}")
 
-    docs_transformed = html2text.transform_documents(docs)
+    docs_transformed = h2t.transform_documents(docs)
 
     prompt = ChatPromptTemplate.from_template(
         """Please prepare a summary of the paper you have given in the following format in Japanese.
@@ -57,6 +73,8 @@ The paper begins here:
 ---
 {context}"""
     )
+
+    llm = ChatOpenAI(model="gpt-4o-mini", api_key=config.openai_api_key)  # type: ignore
     chain = create_stuff_documents_chain(llm, prompt)
     result = chain.invoke({"context": docs_transformed})
 
@@ -87,8 +105,4 @@ def load_rss(url: str) -> dict:
 if __name__ == "__main__":
     rss_dict = load_rss(url="https://rss.arxiv.org/rss/cs.RO")
     page = rss_dict["items"][0]
-    summarized_text = load_html2text(page["link"])
-
-    print(page["title"])
-    print("-----")
-    pprint(summarized_text)
+    pprint(query_pydantic_ai(page["link"]))

@@ -9,6 +9,7 @@ dependencies = [
     "html2text==2024.2.26",
     "langchain-community==0.3.10",
     "langchain-openai==0.2.12",
+    "pydantic-ai==0.0.12",
     "pydantic-settings==2.6.1",
     "requests==2.32.3",
 ]

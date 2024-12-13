@@ -1,0 +1,12 @@
+services:
+  - type: cron
+    name: summori
+    region: singapore
+    plan: starter
+    runtime: docker
+    schedule: "0 * * * *"
+    rootDir: ./
+    dockerfilePath: docker/api/Dockerfile
+    dockerContext: apps/api
+    dockerCommand: "uv run --no-dev python api/main.py"
+    autoDeploy: true

@@ -1,5 +1,4 @@
 import xml.etree.ElementTree as ET
-from pprint import pprint
 
 import html2text
 import requests
@@ -13,6 +12,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 
 from api.config import config
+from api.discord import send_message
 
 
 def query_pydantic_ai(url: str):
@@ -105,4 +105,11 @@ def load_rss(url: str) -> dict:
 if __name__ == "__main__":
     rss_dict = load_rss(url="https://rss.arxiv.org/rss/cs.RO")
     page = rss_dict["items"][0]
-    pprint(query_pydantic_ai(page["link"]))
+    summarized_text = query_pydantic_ai(page["link"])
+    send_message(
+        message=f"""{page["title"]}
+{page["link"]}
+
+{summarized_text}
+"""
+    )

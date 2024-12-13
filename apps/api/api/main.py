@@ -110,9 +110,10 @@ def load_rss(url: str) -> dict:
 
 if __name__ == "__main__":
     rss_dict = load_rss(url="https://rss.arxiv.org/rss/cs.RO")
-    now = datetime.now()
     for page in rss_dict["items"]:
-        if now - page["published_at"] <= timedelta(minutes=60):
+        published_at = page["published_at"]
+        datetime_diff = datetime.now(tz=published_at.tzinfo) - published_at
+        if datetime_diff <= timedelta(minutes=60):
             summarized_text = query_pydantic_ai(page["link"])
             send_message(
                 message=f"""{page["title"]}

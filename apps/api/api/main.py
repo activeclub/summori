@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from datetime import datetime, timedelta
 
 import html2text
 import requests
@@ -97,6 +98,11 @@ def load_rss(url: str) -> dict:
         item_dict: dict = {}
         item_dict["title"] = getattr(item.find("title"), "text", "")
         item_dict["link"] = getattr(item.find("link"), "text", "")
+        item_dict["description"] = getattr(item.find("description"), "text", "")
+        published_at_str = getattr(item.find("pubDate"), "text", "")
+        item_dict["published_at"] = datetime.strptime(
+            published_at_str, "%a, %d %b %Y %H:%M:%S %z"
+        )
         rss_dict["items"].append(item_dict)
 
     return rss_dict
@@ -104,12 +110,14 @@ def load_rss(url: str) -> dict:
 
 if __name__ == "__main__":
     rss_dict = load_rss(url="https://rss.arxiv.org/rss/cs.RO")
-    page = rss_dict["items"][0]
-    summarized_text = query_pydantic_ai(page["link"])
-    send_message(
-        message=f"""{page["title"]}
-{page["link"]}
+    now = datetime.now()
+    for page in rss_dict["items"]:
+        if now - page["published_at"] <= timedelta(minutes=60):
+            summarized_text = query_pydantic_ai(page["link"])
+            send_message(
+                message=f"""{page["title"]}
+        {page["link"]}
 
-{summarized_text}
-"""
-    )
+        {summarized_text}
+        """
+            )

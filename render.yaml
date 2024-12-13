@@ -4,7 +4,7 @@ services:
     region: singapore
     plan: starter
     runtime: docker
-    schedule: "*/5 * * * *"
+    schedule: "0 * * * *"
     rootDir: ./
     dockerfilePath: docker/api/Dockerfile
     dockerContext: apps/api

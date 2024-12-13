@@ -13,11 +13,9 @@ from api.config import config
 
 llm = ChatOpenAI(model="gpt-4o-mini", api_key=config.openai_api_key)  # type: ignore
 
-page_url = "https://arxiv.org/html/2412.05313v1"
 
-
-def load_web():
-    loader = WebBaseLoader(web_paths=[page_url])
+def load_web(url: str):
+    loader = WebBaseLoader(web_paths=[url])
 
     docs = loader.load()
 
@@ -25,10 +23,10 @@ def load_web():
     print(doc)
 
 
-def load_html2text():
+def load_html2text(url: str):
     html2text = Html2TextTransformer()
 
-    loader = AsyncHtmlLoader([page_url])
+    loader = AsyncHtmlLoader([url])
     docs = loader.load()
     assert len(docs) == 1
 
@@ -40,7 +38,7 @@ def load_html2text():
         if img_tag["src"].startswith("data:"):
             images.append(img_tag["src"])
         else:
-            images.append(f"{page_url}/{img_tag['src']}")
+            images.append(f"{url}/{img_tag['src']}")
 
     docs_transformed = html2text.transform_documents(docs)
 
@@ -62,19 +60,35 @@ The paper begins here:
     chain = create_stuff_documents_chain(llm, prompt)
     result = chain.invoke({"context": docs_transformed})
 
-    pprint(result)
+    return result
 
 
-def load_rss():
-    url = "https://news.ycombinator.com/rss"
+def load_rss(url: str) -> dict:
     r = requests.get(url)
     root = ET.fromstring(r.text)
 
-    channel = root[0]
-    for child in channel:
-        if child.tag == "title":
-            print(child.text)
+    channel = root.find("channel")
+    if channel is None:
+        return {}
+
+    rss_dict: dict = {"title": None, "items": []}
+    rss_dict["title"] = getattr(channel.find("title"), "text", "")
+
+    items = channel.findall("item")
+    for item in items:
+        item_dict: dict = {}
+        item_dict["title"] = getattr(item.find("title"), "text", "")
+        item_dict["link"] = getattr(item.find("link"), "text", "")
+        rss_dict["items"].append(item_dict)
+
+    return rss_dict
 
 
 if __name__ == "__main__":
-    load_rss()
+    rss_dict = load_rss(url="https://rss.arxiv.org/rss/cs.RO")
+    page = rss_dict["items"][0]
+    summarized_text = load_html2text(page["link"])
+
+    print(page["title"])
+    print("-----")
+    pprint(summarized_text)

@@ -1,4 +1,4 @@
-FROM python:3.10-slim-buster AS python-base
+FROM python:3.11-slim-buster AS python-base
 COPY --from=ghcr.io/astral-sh/uv:0.5.9 /uv /uvx /bin/
 ENV \
   # python

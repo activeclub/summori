@@ -16,7 +16,7 @@ from pydantic_ai.models.openai import OpenAIModel
 from api.config import config
 from api.discord import send_message
 
-logfire.configure()
+logfire.configure(send_to_logfire="if-token-present")
 
 
 def query_pydantic_ai(url: str):

@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 
 import html2text
+import logfire
 import requests
 from bs4 import BeautifulSoup
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -14,6 +15,8 @@ from pydantic_ai.models.openai import OpenAIModel
 
 from api.config import config
 from api.discord import send_message
+
+logfire.configure()
 
 
 def query_pydantic_ai(url: str):
@@ -110,10 +113,9 @@ def load_rss(url: str) -> dict:
 
 if __name__ == "__main__":
     rss_dict = load_rss(url="https://rss.arxiv.org/rss/cs.RO")
-    for page in rss_dict["items"]:
-        published_at = page["published_at"]
-        datetime_diff = datetime.now(tz=published_at.tzinfo) - published_at
-        if datetime_diff <= timedelta(minutes=60):
+    now = datetime.now()
+    for page in rss_dict["items"][:5]:
+        if now - page["published_at"] <= timedelta(minutes=60):
             summarized_text = query_pydantic_ai(page["link"])
             send_message(
                 message=f"""{page["title"]}

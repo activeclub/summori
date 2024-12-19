@@ -8,7 +8,7 @@ dependencies = [
     "beautifulsoup4==4.12.3",
     "html2text==2024.2.26",
     "langchain-community==0.3.12",
-    "langchain-openai==0.2.12",
+    "langchain-openai==0.2.14",
     "pydantic-ai[logfire]==0.0.13",
     "pydantic-settings==2.7.0",
     "requests==2.32.3",

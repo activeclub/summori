@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = "==3.11.*"
 dependencies = [
     "beautifulsoup4==4.12.3",
-    "html2text==2024.2.26",
+    "html2text==2025.4.15",
     "langchain-community==0.3.12",
     "langchain-openai==0.2.12",
     "pydantic-ai[logfire]==0.0.13",
